@@ -1,6 +1,6 @@
 Amazon Data Project: Customer Segmentation, Sales Forecasting, Pricing Optimization, and Recommendation Systems
 
-SQL Techniques Used:
+SQL Functions Used:
 
     Window Functions: Calculating moving averages, ranking customers, and performing price elasticity analysis.
     String Functions: Not explicitly required here, but could be used for formatting names or processing text.
