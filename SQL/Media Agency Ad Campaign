@@ -1,9 +1,9 @@
 Project: Media Agency Ad Campaign Performance Analysis and Optimization Using SQL
 
-Project Overview: The goal of this project is to provide an in-depth analysis of advertising campaign performance using SQL. 
-The project leverages a dataset from an advertising platform that includes metrics such as impressions, clicks, conversions, 
-video starts, video completions, and campaign costs. The objective is to analyze the performance of different ad placements, 
-partners, and devices, while also optimizing costs and identifying opportunities for improvement.
+Overview: The goal of this project is to provide an in-depth analysis of advertising campaign performance using SQL. 
+          The project leverages a dataset from an advertising platform that includes metrics such as impressions, clicks, conversions, 
+          video starts, video completions, and campaign costs. The objective is to analyze the performance of different ad placements, 
+          partners, and devices, while also optimizing costs and identifying opportunities for improvement.
 
 The goal of this project is to showcase SQL skills for data analysis and reporting by:
 
