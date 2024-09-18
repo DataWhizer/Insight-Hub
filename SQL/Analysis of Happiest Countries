@@ -1,1 +1,106 @@
+-- Create a new database for the project
+CREATE DATABASE happiest_countries_db;
 
+-- Switch to the new database
+USE happiest_countries_db;
+
+-- Create a table for storing country happiness data
+CREATE TABLE country_happiness (
+    country_id INT AUTO_INCREMENT PRIMARY KEY,
+    country_name VARCHAR(255),
+    year INT,
+    happiness_rank INT,
+    happiness_score DECIMAL(3, 2),
+    GDP_per_capita DECIMAL(5, 4),
+    social_support DECIMAL(5, 4),
+    healthy_life_expectancy DECIMAL(5, 4),
+    freedom_to_make_choices DECIMAL(5, 4),
+    generosity DECIMAL(5, 4),
+    perceptions_of_corruption DECIMAL(5, 4),
+    region VARCHAR(255)
+);
+
+-- Insert data into the table (for example, year 2021 data)
+-- In a real-world project, this would be done by importing a CSV file or an external data source
+INSERT INTO country_happiness (country_name, year, happiness_rank, happiness_score, GDP_per_capita, social_support, healthy_life_expectancy, freedom_to_make_choices, generosity, perceptions_of_corruption, region)
+VALUES
+('Finland', 2021, 1, 7.842, 1.447, 1.598, 0.961, 0.662, 0.148, 0.186, 'Europe'),
+('Denmark', 2021, 2, 7.620, 1.515, 1.573, 0.861, 0.686, 0.150, 0.179, 'Europe'),
+('Switzerland', 2021, 3, 7.571, 1.564, 1.526, 1.068, 0.674, 0.230, 0.263, 'Europe'),
+('Iceland', 2021, 4, 7.554, 1.504, 1.644, 1.001, 0.674, 0.293, 0.166, 'Europe'),
+('Netherlands', 2021, 5, 7.464, 1.503, 1.522, 0.922, 0.667, 0.175, 0.182, 'Europe'),
+-- Add more rows as needed
+('United States', 2021, 19, 6.951, 1.553, 1.494, 0.836, 0.572, 0.177, 0.154, 'North America');
+
+
+-- Check for any missing data
+SELECT * FROM country_happiness
+WHERE country_name IS NULL OR happiness_score IS NULL OR GDP_per_capita IS NULL;
+
+-- Update any missing values (if necessary) or flag them as null (Here, assume no missing values)
+-- For example, we can handle missing perceptions_of_corruption by replacing them with average values
+UPDATE country_happiness
+SET perceptions_of_corruption = (
+    SELECT AVG(perceptions_of_corruption)
+    FROM country_happiness
+    WHERE perceptions_of_corruption IS NOT NULL
+)
+WHERE perceptions_of_corruption IS NULL;
+
+-- Ensure region names are consistent
+UPDATE country_happiness
+SET region = TRIM(region);
+
+-- Find the top 10 happiest countries
+SELECT country_name, happiness_rank, happiness_score
+FROM country_happiness
+WHERE year = 2021
+ORDER BY happiness_rank ASC
+LIMIT 10;
+
+-- Calculate average happiness score by region
+SELECT region, AVG(happiness_score) AS avg_happiness_score
+FROM country_happiness
+WHERE year = 2021
+GROUP BY region
+ORDER BY avg_happiness_score DESC;
+
+-- Explore the correlation between GDP per capita and happiness score
+SELECT GDP_per_capita, happiness_score
+FROM country_happiness
+WHERE year = 2021;
+
+-- Analyze the relationship between social support and happiness
+SELECT social_support, happiness_score
+FROM country_happiness
+WHERE year = 2021
+ORDER BY social_support DESC;
+
+-- Find countries with low corruption perception and high happiness
+SELECT country_name, happiness_score, perceptions_of_corruption
+FROM country_happiness
+WHERE year = 2021
+AND perceptions_of_corruption < 0.200
+AND happiness_score > 6.5
+ORDER BY happiness_score DESC;
+
+-- Create a view to analyze key happiness factors by region
+CREATE VIEW happiness_factors_by_region AS
+SELECT region, AVG(GDP_per_capita) AS avg_GDP_per_capita, AVG(social_support) AS avg_social_support,
+       AVG(healthy_life_expectancy) AS avg_life_expectancy, AVG(freedom_to_make_choices) AS avg_freedom,
+       AVG(generosity) AS avg_generosity, AVG(perceptions_of_corruption) AS avg_corruption
+FROM country_happiness
+WHERE year = 2021
+GROUP BY region;
+
+-- Find regions with the highest life expectancy
+SELECT region, avg_life_expectancy
+FROM happiness_factors_by_region
+ORDER BY avg_life_expectancy DESC;
+
+
+-- Key Insights
+-- Top Happiest Countries: Finland, Denmark, Switzerland, and Iceland rank among the top, primarily due to high levels of social support and life expectancy.
+-- Regions and Happiness: European countries generally have higher happiness scores, likely due to high GDP per capita, strong social support systems, and low perceptions of corruption.
+-- Drivers of Happiness: Initial analysis indicates a strong correlation between happiness and GDP per capita, social support, and freedom to make life choices. Interestingly, generosity and perceptions of corruption seem to have weaker direct correlations with happiness but are still important factors.
+-- Opportunities for Further Exploration: Deeper statistical analysis using Python or R could further uncover the extent to which each factor (GDP, social support, etc.) contributes to overall happiness.
