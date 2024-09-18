@@ -1,0 +1,105 @@
+Project: Manchester United Transfer Market and Financial Analysis
+
+Project overview: This project focuses on analyzing Manchester United's transfer market activities and financial 
+data over recent seasons. By integrating key metrics such as transfer fees, sale fees, revenue, and expenses, 
+the project aims to provide insights into the club's financial health and efficiency in managing player transfers.
+
+The goal of this project is to showcase Python skills for data analysis and reporting by:
+
+    Data Manipulation: Utilizing pandas for loading, cleaning, and transforming financial and transfer market data into a structured format for analysis.
+    Performing Calculations: Demonstrating the ability to compute key metrics such as net transfer spend, profit/loss, and financial efficiency across multiple seasons.
+    Data Visualization: Using matplotlib to create various visualizations, including bar charts, line graphs, and pie charts, that effectively communicate trends and insights in the data.
+    Correlation Analysis: Implementing statistical methods to explore relationships between financial variables, such as the correlation between transfer spending and profitability.
+    Generating Key Insights: Summarizing results and highlighting actionable insights to assist stakeholders in understanding the impact of transfer market activities on the club's financial performance.
+    Advanced Reporting: Providing a comprehensive analysis by including both basic and advanced financial metrics, with a clear focus on improving decision-making and resource allocation.
+
+# Import necessary libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+
+# Sample data: Manchester United transfer market and financial information
+data = {
+    'Season': ['2020/21', '2021/22', '2022/23', '2023/24'],
+    'Player Purchased': ['Bruno Fernandes', 'Jadon Sancho', 'Antony', 'Mason Mount'],
+    'Transfer Fee (£M)': [55.0, 73.0, 85.0, 60.0],
+    'Player Sold': ['Romelu Lukaku', 'Daniel James', 'Paul Pogba', 'David de Gea'],
+    'Sale Fee (£M)': [73.0, 25.0, 0, 0],
+    'Revenue (£M)': [580.0, 589.0, 583.0, 590.0],
+    'Expenses (£M)': [495.0, 510.0, 530.0, 545.0]
+}
+
+# Create DataFrame
+df = pd.DataFrame(data)
+
+# Display the data to the user
+print("Transfer Market and Financial Data:")
+print(df)
+
+# Calculate net spend in the transfer market
+df['Net Transfer Spend (£M)'] = df['Transfer Fee (£M)'] - df['Sale Fee (£M)']
+print("\nNet Transfer Spend (£M):")
+print(df[['Season', 'Net Transfer Spend (£M)']])
+
+# Calculate overall profit/loss for the seasons (Revenue - Expenses)
+df['Profit/Loss (£M)'] = df['Revenue (£M)'] - df['Expenses (£M)']
+print("\nProfit/Loss (£M):")
+print(df[['Season', 'Profit/Loss (£M)']])
+
+# Calculate the total net transfer spend over the period
+total_net_spend = df['Net Transfer Spend (£M)'].sum()
+print(f"\nTotal Net Transfer Spend over the period: £{total_net_spend}M")
+
+# Calculate average profit/loss
+average_profit_loss = df['Profit/Loss (£M)'].mean()
+print(f"Average Profit/Loss per season: £{average_profit_loss:.2f}M")
+
+# Visualizing the data
+plt.figure(figsize=(10, 6))
+
+# Bar chart for transfer fees and sale fees
+plt.subplot(2, 1, 1)
+plt.bar(df['Season'], df['Transfer Fee (£M)'], color='blue', label='Transfer Fee (£M)')
+plt.bar(df['Season'], df['Sale Fee (£M)'], color='orange', label='Sale Fee (£M)', alpha=0.7)
+plt.title('Manchester United Transfer Fees by Season')
+plt.ylabel('Amount (£M)')
+plt.legend()
+
+# Line chart for profit/loss
+plt.subplot(2, 1, 2)
+plt.plot(df['Season'], df['Profit/Loss (£M)'], marker='o', color='green', label='Profit/Loss (£M)')
+plt.title('Manchester United Profit/Loss by Season')
+plt.ylabel('Amount (£M)')
+plt.legend()
+
+# Show the plots
+plt.tight_layout()
+plt.show()
+
+# Advanced Financial Metrics
+# Calculate the financial efficiency ratio (Revenue to Expenses ratio)
+df['Financial Efficiency'] = df['Revenue (£M)'] / df['Expenses (£M)']
+print("\nFinancial Efficiency Ratio (Revenue/Expenses):")
+print(df[['Season', 'Financial Efficiency']])
+
+# Calculate correlation between transfer spend and profit/loss
+correlation = df['Net Transfer Spend (£M)'].corr(df['Profit/Loss (£M)'])
+print(f"\nCorrelation between Net Transfer Spend and Profit/Loss: {correlation:.2f}")
+
+# Additional Visualizations
+plt.figure(figsize=(10, 6))
+
+# Pie chart of revenue and expenses for the latest season
+latest_season = df.iloc[-1]
+labels = ['Revenue', 'Expenses']
+sizes = [latest_season['Revenue (£M)'], latest_season['Expenses (£M)']]
+plt.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['green', 'red'])
+plt.title(f'Financial Breakdown for {latest_season["Season"]}')
+
+# Show the pie chart
+plt.show()
+
+# Key Insights
+print("\nKey Insights:")
+print("1. Manchester United has a consistently high net transfer spend, peaking at £85M in 2022/23.")
+print("2. The club has maintained profitability despite increasing expenses over the seasons.")
+print(f"3. There is a moderate correlation ({correlation:.2f}) between net transfer spend and overall profit/loss.")
