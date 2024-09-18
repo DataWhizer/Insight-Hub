@@ -1,4 +1,4 @@
-# Megan Lee - Data & Business Intelligence Portfolio
+# Megan Lee - Data Analyst Portfolio
 
 Welcome to my portfolio!
 
