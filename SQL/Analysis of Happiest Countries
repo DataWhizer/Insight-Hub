@@ -1,3 +1,15 @@
+SQL Project: Analysis of Happiest Countries
+
+Project Overview: This project aims to analyze the happiest countries based on various socioeconomic and well-being factors. The dataset used is derived from the World Happiness Report, which measures happiness in terms of life expectancy, GDP per capita, social support, freedom to make life choices, generosity, and perceptions of corruption.
+
+The goal of this project is to showcase SQL skills for data analysis and reporting by:
+
+    Importing data.
+    Cleaning and preparing the dataset.
+    Analyzing happiness factors across different regions.
+    Visualizing insights into what drives happiness.
+    Generating reports for top happiest countries, regions, and key happiness determinants.
+
 -- Create a new database for the project
 CREATE DATABASE happiest_countries_db;
 
