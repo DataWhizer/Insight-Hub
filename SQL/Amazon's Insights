@@ -1,0 +1,120 @@
+Amazon Data Project: Customer Segmentation, Sales Forecasting, Pricing Optimization, and Recommendation Systems
+
+SQL Techniques Used:
+
+    Window Functions: Calculating moving averages, ranking customers, and performing price elasticity analysis.
+    String Functions: Not explicitly required here, but could be used for formatting names or processing text.
+    Subqueries: Used in RFM analysis, sales aggregation, and pricing optimization to calculate intermediary results.
+    Aggregate Functions: Calculating total sales, average prices, and quantities.
+    Conditional Logic: Segmenting customers based on RFM scores and calculating price elasticity.
+
+1.Customer Segmentation
+RFM Segmentation (Recency, Frequency, Monetary Value)
+
+-- Calculate Recency, Frequency, and Monetary value for each customer
+WITH rfm AS (
+    SELECT
+        c.customer_id,
+        c.first_name,
+        c.last_name,
+        MAX(o.order_date) AS last_purchase_date,
+        COUNT(o.order_id) AS frequency,
+        SUM(o.total_amount) AS monetary,
+        DATEDIFF(DAY, MAX(o.order_date), GETDATE()) AS recency -- Get difference from the current date
+    FROM Orders o
+    JOIN Customers c ON o.customer_id = c.customer_id
+    GROUP BY c.customer_id, c.first_name, c.last_name
+)
+
+-- Assign segments based on RFM scores
+SELECT
+    customer_id,
+    first_name,
+    last_name,
+    CASE 
+        WHEN recency <= 30 THEN 'Active'
+        WHEN recency <= 90 THEN 'Engaged'
+        ELSE 'Churned'
+    END AS recency_segment,
+    CASE 
+        WHEN frequency >= 10 THEN 'High Frequency'
+        WHEN frequency >= 5 THEN 'Medium Frequency'
+        ELSE 'Low Frequency'
+    END AS frequency_segment,
+    CASE 
+        WHEN monetary >= 500 THEN 'High Spender'
+        WHEN monetary >= 100 THEN 'Medium Spender'
+        ELSE 'Low Spender'
+    END AS monetary_segment
+FROM rfm;
+
+2. Sales Forecasting
+
+-- Aggregate monthly sales
+WITH monthly_sales AS (
+    SELECT 
+        YEAR(order_date) AS year,
+        MONTH(order_date) AS month,
+        SUM(total_amount) AS monthly_sales
+    FROM Orders
+    GROUP BY YEAR(order_date), MONTH(order_date)
+)
+
+-- Used a simple window function to calculate a 3-month moving average
+SELECT 
+    year,
+    month,
+    monthly_sales,
+    AVG(monthly_sales) OVER (ORDER BY year, month ROWS BETWEEN 2 PRECEDING AND CURRENT ROW) AS moving_avg_sales
+FROM monthly_sales;
+
+3. Pricing Optimization
+Analyze how pricing affects sales by calculating the price elasticity using subqueries and window functions.
+
+-- Calculate total revenue for each product and its average price
+WITH product_sales AS (
+    SELECT 
+        p.product_id,
+        p.product_name,
+        AVG(p.price) AS avg_price,
+        SUM(o.quantity) AS total_quantity,
+        SUM(o.total_amount) AS total_revenue
+    FROM Orders o
+    JOIN Products p ON o.product_id = p.product_id
+    GROUP BY p.product_id, p.product_name
+)
+
+-- Calculate the price elasticity by comparing the percentage change in price with quantity sold 
+SELECT
+    product_id,
+    product_name,
+    avg_price,
+    total_quantity,
+    LAG(avg_price) OVER (ORDER BY product_id) AS prev_price,
+    LAG(total_quantity) OVER (ORDER BY product_id) AS prev_quantity,
+    ((avg_price - prev_price) / prev_price) * 100 AS price_change_pct,
+    ((total_quantity - prev_quantity) / prev_quantity) * 100 AS quantity_change_pct,
+    (quantity_change_pct / price_change_pct) AS price_elasticity
+FROM product_sales
+WHERE prev_price IS NOT NULL AND prev_quantity IS NOT NULL;
+
+4. Recommendation System
+-- Find frequently bought together items
+WITH product_combinations AS (
+    SELECT
+        o1.order_id,
+        o1.product_id AS product_1,
+        o2.product_id AS product_2
+    FROM Orders o1
+    JOIN Orders o2 ON o1.order_id = o2.order_id AND o1.product_id <> o2.product_id
+)
+
+-- Calculate the count of product combinations
+SELECT
+    product_1,
+    product_2,
+    COUNT(*) AS combination_count
+FROM product_combinations
+GROUP BY product_1, product_2
+ORDER BY combination_count DESC;
+
