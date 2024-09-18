@@ -1,0 +1,205 @@
+Project: Forecasting Future COVID-19 Cases
+
+Overview: The "COVID-19 Case Forecasting Using Time-Series Analysis" project 
+          aims to predict future COVID-19 case numbers based on historical data using 
+          time-series forecasting techniques. By applying data preprocessing, time-series 
+          modeling, and statistical methods, this project builds a model to provide insights 
+          into future case trends.
+
+The goal of this project is to showcase Python skills for data analysis and reporting by:
+
+    Data Loading & Preprocessing: Using pandas to clean and prepare datasets for analysis.
+    Visualization: Creating insightful time-series visualizations with matplotlib.
+    Modeling: Applying Exponential Smoothing for time-series forecasting.
+    Evaluation: Using Mean Squared Error (MSE) to assess model accuracy.
+    Forecasting & Reporting: Generating future predictions and visual reports.
+    Automation: Writing reusable functions for efficient data workflows.
+    End-to-End Pipeline: Managing the full process from data ingestion to prediction.
+
+# Import libraries
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+from statsmodels.tsa.holtwinters import ExponentialSmoothing
+
+# Load historical COVID-19 case data from a CSV file
+def load_data(file_path):
+    """
+    Load COVID-19 case data from a CSV file.
+
+    Parameters:
+    file_path (str): The path to the CSV file.
+
+    Returns:
+    pd.DataFrame: A DataFrame with the historical data.
+    """
+    df = pd.read_csv(file_path, parse_dates=['Date'], index_col='Date')
+    return df
+
+# Clean and preprocess the data
+def preprocess_data(df):
+    """
+    Preprocess the data by checking for null values and handling missing data.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame with historical COVID-19 data.
+
+    Returns:
+    pd.DataFrame: Cleaned DataFrame.
+    """
+    # Check for missing values
+    if df.isnull().sum().any():
+        df = df.fillna(method='ffill')  # Forward fill missing data
+    return df
+
+# Plot historical COVID-19 cases
+def plot_data(df):
+    """
+    Plot the historical COVID-19 case data.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame with historical data.
+    """
+    plt.figure(figsize=(10, 6))
+    plt.plot(df.index, df['Cases'], label='COVID-19 Cases')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Cases')
+    plt.title('Historical COVID-19 Cases')
+    plt.legend()
+    plt.show()
+
+# Split the data into training and testing sets
+def split_data(df, test_size=0.2):
+    """
+    Split the data into training and testing sets.
+
+    Parameters:
+    df (pd.DataFrame): DataFrame with historical COVID-19 data.
+    test_size (float): The proportion of data to be used for testing.
+
+    Returns:
+    pd.DataFrame, pd.DataFrame: Training and testing sets.
+    """
+    train_size = int(len(df) * (1 - test_size))
+    train, test = df[:train_size], df[train_size:]
+    return train, test
+
+# Build a time-series forecasting model using Exponential Smoothing
+def build_model(train):
+    """
+    Build an Exponential Smoothing model for time-series forecasting.
+
+    Parameters:
+    train (pd.DataFrame): Training data for model building.
+
+    Returns:
+    model: Trained time-series forecasting model.
+    """
+    model = ExponentialSmoothing(train['Cases'], trend='add', seasonal='add', seasonal_periods=7).fit()
+    return model
+
+# Evaluate the model's performance
+def evaluate_model(model, test):
+    """
+    Evaluate the model's performance using the test set.
+
+    Parameters:
+    model: Trained time-series forecasting model.
+    test (pd.DataFrame): Testing data for evaluation.
+
+    Returns:
+    float: Mean squared error of the model.
+    """
+    predictions = model.forecast(len(test))
+    mse = mean_squared_error(test['Cases'], predictions)
+    return mse, predictions
+
+# Plot the model's predictions versus actual data
+def plot_predictions(train, test, predictions):
+    """
+    Plot the model's predictions and compare them with actual test data.
+
+    Parameters:
+    train (pd.DataFrame): Training data.
+    test (pd.DataFrame): Testing data.
+    predictions (pd.Series): Model's forecasted values.
+    """
+    plt.figure(figsize=(10, 6))
+    plt.plot(train.index, train['Cases'], label='Train Data')
+    plt.plot(test.index, test['Cases'], label='Test Data', color='orange')
+    plt.plot(test.index, predictions, label='Predicted', color='green')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Cases')
+    plt.title('COVID-19 Cases Prediction')
+    plt.legend()
+    plt.show()
+
+# Forecast future COVID-19 case numbers
+def forecast_future(model, periods=30):
+    """
+    Forecast future COVID-19 case numbers.
+
+    Parameters:
+    model: Trained time-series forecasting model.
+    periods (int): Number of future periods to forecast.
+
+    Returns:
+    pd.Series: Forecasted values for the future.
+    """
+    future_predictions = model.forecast(periods)
+    return future_predictions
+
+# Plot future forecast
+def plot_future_forecast(df, future_predictions):
+    """
+    Plot future forecasted COVID-19 case numbers.
+
+    Parameters:
+    df (pd.DataFrame): Historical COVID-19 data.
+    future_predictions (pd.Series): Forecasted future values.
+    """
+    future_dates = pd.date_range(df.index[-1], periods=len(future_predictions) + 1, freq='D')[1:]
+    
+    plt.figure(figsize=(10, 6))
+    plt.plot(df.index, df['Cases'], label='Historical Cases')
+    plt.plot(future_dates, future_predictions, label='Future Forecast', color='red')
+    plt.xlabel('Date')
+    plt.ylabel('Number of Cases')
+    plt.title('COVID-19 Cases Future Forecast')
+    plt.legend()
+    plt.show()
+
+# Main function to execute the project
+def main():
+    # Load and preprocess the data
+    file_path = 'covid_data.csv'  # Path to the CSV file containing the data
+    df = load_data(file_path)
+    df = preprocess_data(df)
+
+    # Plot the historical data
+    plot_data(df)
+
+    # Split the data into training and testing sets
+    train, test = split_data(df)
+
+    # Build the forecasting model
+    model = build_model(train)
+
+    # Evaluate the model
+    mse, predictions = evaluate_model(model, test)
+    print(f'Mean Squared Error of the model: {mse}')
+
+    # Plot the predictions vs actual data
+    plot_predictions(train, test, predictions)
+
+    # Forecast future COVID-19 cases
+    future_predictions = forecast_future(model, periods=30)
+
+    # Plot future forecast
+    plot_future_forecast(df, future_predictions)
+
+# Execute the main function
+if __name__ == '__main__':
+    main()
