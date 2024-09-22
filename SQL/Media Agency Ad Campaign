@@ -5,17 +5,6 @@ Overview: The goal of this project is to provide an in-depth analysis of adverti
           video starts, video completions, and campaign costs. The objective is to analyze the performance of different ad placements, 
           partners, and devices, while also optimizing costs and identifying opportunities for improvement.
 
-The goal of this project is to showcase SQL skills for data analysis and reporting by:
-
-    Importing data.
-    Cleaning and preparing the dataset.
-    Analyzing happiness factors across different regions.
-    Visualizing insights into what drives happiness.
-    Generating reports for top happiest countries, regions, and key happiness determinants.
-
-
--- SQL Data Project: Comprehensive Analysis of Ad Campaigns
-
 -- 1. Campaign Performance Analysis
 -- Aggregate total impressions, clicks, and conversions for each partner and tactic.
 SELECT 
