@@ -1,13 +1,5 @@
 Amazon Data Project: Customer Segmentation, Sales Forecasting, Pricing Optimization, and Recommendation Systems
 
-SQL Functions Used:
-
-    Window Functions: Calculating moving averages, ranking customers, and performing price elasticity analysis.
-    String Functions: Not explicitly required here, but could be used for formatting names or processing text.
-    Subqueries: Used in RFM analysis, sales aggregation, and pricing optimization to calculate intermediary results.
-    Aggregate Functions: Calculating total sales, average prices, and quantities.
-    Conditional Logic: Segmenting customers based on RFM scores and calculating price elasticity.
-
 1.Customer Segmentation
 RFM Segmentation (Recency, Frequency, Monetary Value)
 
