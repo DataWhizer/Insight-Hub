@@ -6,16 +6,6 @@ Overview: The "COVID-19 Case Forecasting Using Time-Series Analysis" project
           modeling, and statistical methods, this project builds a model to provide insights 
           into future case trends.
 
-The goal of this project is to showcase Python skills for data analysis and reporting by:
-
-    Data Loading & Preprocessing: Using pandas to clean and prepare datasets for analysis.
-    Visualization: Creating insightful time-series visualizations with matplotlib.
-    Modeling: Applying Exponential Smoothing for time-series forecasting.
-    Evaluation: Using Mean Squared Error (MSE) to assess model accuracy.
-    Forecasting & Reporting: Generating future predictions and visual reports.
-    Automation: Writing reusable functions for efficient data workflows.
-    End-to-End Pipeline: Managing the full process from data ingestion to prediction.
-
 # Import libraries
 import pandas as pd
 import numpy as np
