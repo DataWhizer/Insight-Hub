@@ -4,16 +4,7 @@ Overview: This project focuses on analyzing Manchester United's transfer market 
           data over recent seasons. By integrating key metrics such as transfer fees, sale fees, revenue, and expenses, 
           the project aims to provide insights into the club's financial health and efficiency in managing player transfers.
 
-The goal of this project is to showcase Python skills for data analysis and reporting by:
-
-    Data Manipulation: Utilizing pandas for loading, cleaning, and transforming financial and transfer market data into a structured format for analysis.
-    Performing Calculations: Demonstrating the ability to compute key metrics such as net transfer spend, profit/loss, and financial efficiency across multiple seasons.
-    Data Visualization: Using matplotlib to create various visualizations, including bar charts, line graphs, and pie charts, that effectively communicate trends and insights in the data.
-    Correlation Analysis: Implementing statistical methods to explore relationships between financial variables, such as the correlation between transfer spending and profitability.
-    Generating Key Insights: Summarizing results and highlighting actionable insights to assist stakeholders in understanding the impact of transfer market activities on the club's financial performance.
-    Advanced Reporting: Providing a comprehensive analysis by including both basic and advanced financial metrics, with a clear focus on improving decision-making and resource allocation.
-
-# Import necessary libraries
+# Import libraries
 import pandas as pd
 import matplotlib.pyplot as plt
 
