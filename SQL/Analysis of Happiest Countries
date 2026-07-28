@@ -4,13 +4,10 @@ Overview: This project aims to analyze the happiest countries based on various s
           The dataset used is derived from the World Happiness Report, which measures happiness in terms of life 
           expectancy, GDP per capita, social support, freedom to make life choices, generosity, and perceptions of corruption.
 
--- DATABASE & TABLE SETUP
--- ============================================================
+============================================================
  
--- Create the database if it doesn't already exist
 CREATE DATABASE IF NOT EXISTS happiest_countries_db;
  
--- Switch to the new database
 USE happiest_countries_db;
  
 -- Create the main happiness data table
@@ -60,8 +57,6 @@ CREATE INDEX idx_ch_region
 -- ============================================================
 -- DATA INGESTION
 -- ============================================================
--- In production this would be a bulk LOAD DATA INFILE or an ETL pipeline.
--- Region names are entered consistently here so no post-insert TRIM is needed.
  
 INSERT INTO country_happiness
     (country_name, year, happiness_rank, happiness_score,
@@ -81,7 +76,6 @@ VALUES
 -- DATA QUALITY — NULL CHECK
 -- ============================================================
 -- Identify rows with missing values in critical columns.
--- Run this after every data load to catch ingestion issues early.
  
 SELECT *
 FROM country_happiness
@@ -126,8 +120,7 @@ LIMIT 10;
 -- ANALYSIS 2: Average Happiness Score by Region (2021)
 -- ============================================================
 -- Aggregates scores by region to compare continental well-being.
--- Useful for identifying which parts of the world consistently
--- score higher and why.
+-- Useful for identifying which parts of the world consistently score higher and why.
  
 SELECT
     region,
@@ -142,8 +135,7 @@ ORDER BY avg_happiness_score DESC;
 -- ANALYSIS 3: GDP per Capita vs. Happiness Score (2021)
 -- ============================================================
 -- Raw data for scatter-plot analysis or correlation modelling.
--- A positive correlation here suggests wealthier nations tend
--- to report higher happiness — but this is not causal on its own.
+-- A positive correlation here suggests wealthier nations tend to report higher happiness — but this is not causal on its own.
  
 SELECT
     country_name,         -- added for context; helps identify outliers
@@ -158,8 +150,7 @@ ORDER BY GDP_per_capita DESC;  -- sorted so high-GDP countries appear first
 -- ANALYSIS 4: Social Support vs. Happiness (2021)
 -- ============================================================
 -- Countries with stronger social safety nets tend to score higher.
--- Sort descending to see whether high social support reliably
--- maps to high happiness scores.
+-- Sort descending to see whether high social support reliably maps to high happiness scores.
  
 SELECT
     country_name,         -- added for context
@@ -173,10 +164,8 @@ ORDER BY social_support DESC;
 -- ============================================================
 -- ANALYSIS 5: Low Corruption + High Happiness (2021)
 -- ============================================================
--- Finds countries that combine low perceived corruption with high
--- happiness scores — a useful proxy for institutional quality.
--- Thresholds (corruption < 0.200, happiness > 6.5) are based on
--- the dataset distribution; adjust as more rows are added.
+-- Finds countries that combine low perceived corruption with high happiness scores — a useful proxy for institutional quality.
+-- Thresholds (corruption < 0.200, happiness > 6.5) are based on the dataset distribution
  
 SELECT
     country_name,
@@ -192,10 +181,8 @@ ORDER BY happiness_score DESC;
 -- ============================================================
 -- VIEW: Happiness Factors by Region (all years)
 -- ============================================================
--- CHANGE FROM ORIGINAL: removed hardcoded WHERE year = 2021
--- and added year to GROUP BY so this view is reusable across
--- any year loaded into the table. Query it with:
---   SELECT * FROM happiness_factors_by_region WHERE year = 2021;
+
+SELECT * FROM happiness_factors_by_region WHERE year = 2021;
  
 CREATE OR REPLACE VIEW happiness_factors_by_region AS
 SELECT
@@ -214,8 +201,7 @@ GROUP BY year, region;
 -- ============================================================
 -- ANALYSIS 6: Regions with Highest Life Expectancy (2021)
 -- ============================================================
--- Queries the view; add WHERE year = ? to filter by year.
- 
+
 SELECT
     region,
     avg_life_expectancy
