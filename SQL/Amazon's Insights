@@ -1,20 +1,9 @@
 -- Amazon Data Project: Customer Segmentation, Sales Forecasting, Pricing Optimization, Recommendation Systems
 
--- Covers the RFM join, grouping, and aggregation
--- CREATE INDEX idx_orders_customer_date   ON Orders(customer_id, order_date, total_amount);
-
--- Covers the monthly sales aggregation
--- CREATE INDEX idx_orders_date_amount     ON Orders(order_date, total_amount);
-
--- Covers the product self-join in the recommendation query
--- CREATE INDEX idx_orders_orderid_product ON Orders(order_id, product_id);
-
-
 -- ============================================================
 -- 1. CUSTOMER SEGMENTATION — RFM (Recency, Frequency, Monetary)
 -- ============================================================
--- Segments customers by how recently they bought, how often,
--- and how much they spent in total.
+-- Segments customers by how recently they bought, how often, and how much they spent in total.
 
 WITH rfm AS (
     SELECT
@@ -67,8 +56,6 @@ FROM rfm;
 -- ============================================================
 -- 2. SALES FORECASTING — 3-Month Moving Average
 -- ============================================================
--- Aggregates revenue by month, then smooths it with a rolling
--- 3-month average to reveal trend direction.
 
 WITH monthly_sales AS (
     SELECT
@@ -100,10 +87,6 @@ ORDER BY year, month; -- explicit sort ensures window frame is applied correctly
 -- Measures how sensitive demand is to price changes.
 -- Elasticity < -1  = elastic   (buyers respond strongly to price changes)
 -- Elasticity > -1  = inelastic (buyers are relatively price-insensitive)
---
--- NOTE: AVG(p.price) assumes price can vary per order (e.g. discounts).
--- If Products.price is a fixed column, replace AVG(p.price) with MAX(p.price)
--- or pull price from your order line-items table instead.
 
 WITH product_sales AS (
     -- Step 1: aggregate revenue and volume per product
