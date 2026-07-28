@@ -6,163 +6,218 @@ Overview: The goal of this project is to provide an in-depth analysis of adverti
           partners, and devices, while also optimizing costs and identifying opportunities for improvement.
 
 -- 1. Campaign Performance Analysis
--- Aggregate total impressions, clicks, and conversions for each partner and tactic.
-SELECT 
-    partner, 
-    tactic, 
-    SUM(impressions) AS total_impressions, 
-    SUM(clicks) AS total_clicks, 
-    SUM(conversions) AS total_conversions
-FROM 
-    Ad_Server_Primary
-GROUP BY 
-    partner, tactic
-ORDER BY 
-    total_impressions DESC;
-
--- 2. Cost and Revenue Optimization
--- Calculate the average CPM and CPCV for each partner.
-SELECT 
-    partner, 
-    AVG(CASE WHEN cost_structure = 'CPM' THEN rate END) AS avg_cpm,
+-- ============================================================
+-- Aggregate impressions, clicks, and conversions per partner/tactic.
+-- Useful for identifying which partner-tactic combinations drive
+-- the most volume.
+ 
+SELECT
+    partner,
+    tactic,
+    SUM(impressions)  AS total_impressions,
+    SUM(clicks)       AS total_clicks,
+    SUM(conversions)  AS total_conversions
+FROM Ad_Server_Primary
+GROUP BY partner, tactic
+ORDER BY total_impressions DESC;
+ 
+ 
+-- ============================================================
+-- 2. Cost and Revenue Optimization — Avg CPM and CPCV by Partner
+-- ============================================================
+-- Pivots cost structure into columns so CPM and CPCV are
+-- comparable side-by-side per partner.
+-- NOTE: Partners with only one cost structure type will show
+-- NULL for the other column — this is expected and correct.
+-- Use COALESCE(..., 0) if you prefer zeros for reporting tools.
+ 
+SELECT
+    partner,
+    AVG(CASE WHEN cost_structure = 'CPM'  THEN rate END) AS avg_cpm,
     AVG(CASE WHEN cost_structure = 'CPCV' THEN rate END) AS avg_cpcv
-FROM 
-    Combined_Data
-GROUP BY 
-    partner
-ORDER BY 
-    avg_cpm ASC;
-
--- 3. Click-Through Rate (CTR) and Conversion Rate Analysis
--- Calculate the Click-Through Rate (CTR) and Conversion Rate by placement.
-SELECT 
-    placement_id, 
-    (SUM(clicks) / SUM(impressions)) * 100 AS ctr_percentage,
-    (SUM(conversions) / SUM(clicks)) * 100 AS conversion_rate_percentage
-FROM 
-    Ad_Server_Primary
-GROUP BY 
-    placement_id
-ORDER BY 
-    ctr_percentage DESC;
-
--- 4. Video Ad Performance Analysis
--- Analyze video completion rates by calculating the percentage of videos completed out of videos started.
-SELECT 
-    placement_id, 
-    (SUM(video_completes) / SUM(video_starts)) * 100 AS video_completion_rate
-FROM 
-    Video_Ad_Server_Secondary
-GROUP BY 
-    placement_id
-ORDER BY 
-    video_completion_rate DESC;
-
--- 5. Ad Placement Effectiveness by Device
--- Analyze ad performance by device type, grouping data to see how different devices affect ad success.
-SELECT 
-    device_type, 
-    SUM(impressions) AS total_impressions, 
-    SUM(clicks) AS total_clicks, 
-    SUM(conversions) AS total_conversions
-FROM 
-    Combined_Data
-GROUP BY 
-    device_type
-ORDER BY 
-    total_impressions DESC;
-
+FROM Combined_Data
+GROUP BY partner
+ORDER BY avg_cpm ASC;
+ 
+ 
+-- ============================================================
+-- 3. Click-Through Rate (CTR) and Conversion Rate by Placement
+-- ============================================================
+-- SUM(impressions) = 0 or SUM(clicks) = 0 (e.g. a placement that
+-- had activity on one metric but not the other).
+-- NULLIF converts 0 to NULL so the division returns NULL instead
+-- of throwing a divide-by-zero error.
+ 
+SELECT
+    placement_id,
+ 
+    -- CTR: what % of impressions resulted in a click?
+    ROUND(
+        (SUM(clicks) / NULLIF(SUM(impressions), 0)) * 100, 2
+    ) AS ctr_percentage,
+ 
+    -- Conversion Rate: what % of clicks led to a conversion?
+    ROUND(
+        (SUM(conversions) / NULLIF(SUM(clicks), 0)) * 100, 2
+    ) AS conversion_rate_percentage
+ 
+FROM Ad_Server_Primary
+GROUP BY placement_id
+ORDER BY ctr_percentage DESC;
+ 
+ 
+-- ============================================================
+-- 4. Video Ad Performance — Completion Rate by Placement
+-- ============================================================
+-- NOTE: A completion rate above 100% signals a data integrity
+-- issue (more completes logged than starts) — flag for review.
+ 
+SELECT
+    placement_id,
+    ROUND(
+        (SUM(video_completes) / NULLIF(SUM(video_starts), 0)) * 100, 2
+    ) AS video_completion_rate_pct
+FROM Video_Ad_Server_Secondary
+GROUP BY placement_id
+ORDER BY video_completion_rate_pct DESC;
+ 
+ 
+-- ============================================================
+-- 5. Ad Placement Effectiveness by Device Type
+-- ============================================================
+-- Shows which device types (mobile, desktop, CTV, etc.) drive
+-- the most volume. Useful for budget allocation decisions.
+ 
+SELECT
+    device_type,
+    SUM(impressions)  AS total_impressions,
+    SUM(clicks)       AS total_clicks,
+    SUM(conversions)  AS total_conversions
+FROM Combined_Data
+GROUP BY device_type
+ORDER BY total_impressions DESC;
+ 
+ 
+-- ============================================================
 -- 6. Performance Comparison Between Partners
--- Compare performance metrics (impressions, clicks, conversions) across partners.
-SELECT 
-    partner, 
-    SUM(impressions) AS total_impressions, 
-    SUM(clicks) AS total_clicks, 
-    SUM(conversions) AS total_conversions
-FROM 
-    Combined_Data
-GROUP BY 
-    partner
-ORDER BY 
-    total_conversions DESC;
-
--- 7. ROI (Return on Investment) Calculation
--- Calculate ROI for each partner, comparing the cost of campaigns to the revenue generated from conversions.
-WITH TotalCost AS (
-    SELECT 
-        placement_id, 
-        SUM(cost) AS total_cost
-    FROM 
-        Combined_Data
-    GROUP BY 
-        placement_id
+-- ============================================================
+-- Ranks partners by conversions to surface top performers.
+-- Use alongside Query 7 (ROI) to separate high-volume from
+-- high-efficiency partners.
+ 
+SELECT
+    partner,
+    SUM(impressions)  AS total_impressions,
+    SUM(clicks)       AS total_clicks,
+    SUM(conversions)  AS total_conversions
+FROM Combined_Data
+GROUP BY partner
+ORDER BY total_conversions DESC;
+ 
+ 
+-- ============================================================
+-- 7. ROI (Return on Investment) by Partner
+-- ============================================================
+ 
+SET @revenue_per_conversion = 50.00;
+ 
+WITH partner_summary AS (
+    -- Aggregate cost and conversions at the partner level in one pass.
+    -- This avoids the original placement→partner grain mismatch.
+    SELECT
+        partner,
+        SUM(conversions) AS total_conversions,
+        SUM(cost)        AS total_cost
+    FROM Combined_Data
+    GROUP BY partner
 )
-SELECT 
-    Combined_Data.partner, 
-    (SUM(Combined_Data.conversions) * revenue_per_conversion - TotalCost.total_cost) / TotalCost.total_cost * 100 AS roi_percentage
-FROM 
-    TotalCost
-JOIN 
-    Combined_Data ON TotalCost.placement_id = Combined_Data.placement_id
-GROUP BY 
-    Combined_Data.partner
-ORDER BY 
-    roi_percentage DESC;
-
--- 8. Time-Series Analysis of Ad Performance
--- Perform time-series analysis to track daily impressions and clicks over time.
-SELECT 
-    date, 
-    SUM(impressions) AS daily_impressions, 
-    SUM(clicks) AS daily_clicks
-FROM 
-    Ad_Server_Primary
-GROUP BY 
-    date
-ORDER BY 
-    date ASC;
-
+SELECT
+    partner,
+    total_conversions,
+    ROUND(total_cost, 2) AS total_cost,
+    ROUND(
+        (total_conversions * @revenue_per_conversion - total_cost)
+        / NULLIF(total_cost, 0) * 100,
+        2
+    ) AS roi_percentage
+FROM partner_summary
+ORDER BY roi_percentage DESC;
+ 
+ 
+-- ============================================================
+-- 8. Time-Series Analysis — Daily Impressions and Clicks
+-- ============================================================
+-- Tracks day-by-day volume to identify trends, seasonal dips,
+-- or sudden drops that may indicate delivery issues.
+ 
+SELECT
+    DATE(date)           AS report_date,   -- safe for both DATE and DATETIME columns
+    SUM(impressions)     AS daily_impressions,
+    SUM(clicks)          AS daily_clicks
+FROM Ad_Server_Primary
+GROUP BY DATE(date)
+ORDER BY report_date ASC;
+ 
+ 
+-- ============================================================
 -- 9. Anomaly Detection in Ad Metrics
--- Use standard deviation to detect anomalies (unusually high or low impressions) for each partner.
-WITH Stats AS (
-    SELECT 
-        partner, 
-        AVG(impressions) AS avg_impressions, 
-        STDDEV(impressions) AS stddev_impressions
-    FROM 
-        Ad_Server_Primary
-    GROUP BY 
-        partner
+-- ============================================================
+-- Flags daily impression counts that fall more than 2 standard
+-- deviations above or below the partner's mean 
+ 
+WITH stats AS (
+    SELECT
+        partner,
+        AVG(impressions)    AS avg_impressions,
+        STDDEV(impressions) AS stddev_impressions  -- use STDEV() in SQL Server
+    FROM Ad_Server_Primary
+    GROUP BY partner
 )
-SELECT 
-    Ad_Server_Primary.partner, 
-    Ad_Server_Primary.impressions, 
-    CASE 
-        WHEN Ad_Server_Primary.impressions > (Stats.avg_impressions + 2 * Stats.stddev_impressions) THEN 'High Anomaly'
-        WHEN Ad_Server_Primary.impressions < (Stats.avg_impressions - 2 * Stats.stddev_impressions) THEN 'Low Anomaly'
+SELECT
+    asp.partner,
+    asp.date,
+    asp.impressions,
+    CASE
+        WHEN asp.impressions > (s.avg_impressions + 2 * s.stddev_impressions) THEN 'High Anomaly'
+        WHEN asp.impressions < (s.avg_impressions - 2 * s.stddev_impressions) THEN 'Low Anomaly'
         ELSE 'Normal'
     END AS anomaly_status
-FROM 
-    Ad_Server_Primary
-JOIN 
-    Stats ON Ad_Server_Primary.partner = Stats.partner
-ORDER BY 
-    anomaly_status DESC;
+FROM Ad_Server_Primary asp
+JOIN stats s ON asp.partner = s.partner
+-- Sort anomalies to the top; within each tier, show largest deviations first
+ORDER BY
+    CASE
+        WHEN asp.impressions > (s.avg_impressions + 2 * s.stddev_impressions) THEN 1  -- High first
+        WHEN asp.impressions < (s.avg_impressions - 2 * s.stddev_impressions) THEN 2  -- Low second
+        ELSE 3                                                                          -- Normal last
+    END,
+    ABS(asp.impressions - s.avg_impressions) DESC;  -- largest deviation within each tier
+ 
+ 
+-- ============================================================
+-- 10. Metric Correlation — Click and Conversion Ratios
+-- ============================================================
+-- Calculates click-to-impression and conversion-to-click ratios
+-- per placement. 
 
--- 10. Correlation Between Metrics
--- Investigate correlation between impressions, clicks, and conversions by calculating ratios.
-SELECT 
-    placement_id, 
-    SUM(impressions) AS total_impressions, 
-    SUM(clicks) AS total_clicks, 
-    SUM(conversions) AS total_conversions,
-    (SUM(clicks) / NULLIF(SUM(impressions), 0)) AS click_to_impression_ratio,
-    (SUM(conversions) / NULLIF(SUM(clicks), 0)) AS conversion_to_click_ratio
-FROM 
-    Ad_Server_Primary
-GROUP BY 
-    placement_id
-ORDER BY 
-    click_to_impression_ratio DESC;
+SELECT
+    placement_id,
+    SUM(impressions)   AS total_impressions,
+    SUM(clicks)        AS total_clicks,
+    SUM(conversions)   AS total_conversions,
+ 
+    -- Ratio of clicks to impressions (equivalent to CTR as a decimal)
+    ROUND(
+        SUM(clicks) / NULLIF(SUM(impressions), 0), 4
+    ) AS click_to_impression_ratio,
+ 
+    -- Ratio of conversions to clicks (equivalent to CVR as a decimal)
+    ROUND(
+        SUM(conversions) / NULLIF(SUM(clicks), 0), 4
+    ) AS conversion_to_click_ratio
+ 
+FROM Ad_Server_Primary
+GROUP BY placement_id
+ORDER BY click_to_impression_ratio DESC;
 
 
