@@ -4,109 +4,249 @@ Overview: This project aims to analyze the happiest countries based on various s
           The dataset used is derived from the World Happiness Report, which measures happiness in terms of life 
           expectancy, GDP per capita, social support, freedom to make life choices, generosity, and perceptions of corruption.
 
--- Create a new database for the project
-CREATE DATABASE happiest_countries_db;
-
+-- DATABASE & TABLE SETUP
+-- ============================================================
+ 
+-- Create the database if it doesn't already exist
+CREATE DATABASE IF NOT EXISTS happiest_countries_db;
+ 
 -- Switch to the new database
 USE happiest_countries_db;
-
--- Create a table for storing country happiness data
-CREATE TABLE country_happiness (
-    country_id INT AUTO_INCREMENT PRIMARY KEY,
-    country_name VARCHAR(255),
-    year INT,
-    happiness_rank INT,
-    happiness_score DECIMAL(3, 2),
-    GDP_per_capita DECIMAL(5, 4),
-    social_support DECIMAL(5, 4),
-    healthy_life_expectancy DECIMAL(5, 4),
-    freedom_to_make_choices DECIMAL(5, 4),
-    generosity DECIMAL(5, 4),
+ 
+-- Create the main happiness data table
+CREATE TABLE IF NOT EXISTS country_happiness (
+    country_id               INT            AUTO_INCREMENT PRIMARY KEY,
+    country_name             VARCHAR(100)   NOT NULL,                  -- tightened from VARCHAR(255)
+    year                     INT            NOT NULL,
+    happiness_rank           INT,
+    -- BUG FIX: DECIMAL(3,2) only stores up to 9.99 with 2 decimal places.
+    -- Values like 7.842 were silently rounded to 7.84.
+    -- DECIMAL(5,3) allows up to 99.999, safely covering all happiness scores.
+    happiness_score          DECIMAL(5, 3),
+    GDP_per_capita           DECIMAL(5, 4),
+    social_support           DECIMAL(5, 4),
+    healthy_life_expectancy  DECIMAL(5, 4),
+    freedom_to_make_choices  DECIMAL(5, 4),
+    generosity               DECIMAL(5, 4),
     perceptions_of_corruption DECIMAL(5, 4),
-    region VARCHAR(255)
+    region                   VARCHAR(100)                              -- tightened from VARCHAR(255)
 );
-
--- Insert data into the table (for example, year 2021 data)
--- In a real-world project, this would be done by importing a CSV file or an external data source
-INSERT INTO country_happiness (country_name, year, happiness_rank, happiness_score, GDP_per_capita, social_support, healthy_life_expectancy, freedom_to_make_choices, generosity, perceptions_of_corruption, region)
+ 
+ 
+-- ============================================================
+-- INDEXES
+-- ============================================================
+-- Every analytical query below filters on `year`, so a composite
+-- index on (year, happiness_rank) and (year, happiness_score) covers
+-- the most common query patterns without redundant scans.
+ 
+-- Single-column index on year for simple WHERE year = ? filters
+CREATE INDEX idx_ch_year
+    ON country_happiness (year);
+ 
+-- Composite index for "top N by rank in a given year" queries
+CREATE INDEX idx_ch_year_rank
+    ON country_happiness (year, happiness_rank);
+ 
+-- Composite index for score-based filters and aggregations
+CREATE INDEX idx_ch_year_score
+    ON country_happiness (year, happiness_score);
+ 
+-- Index on region for GROUP BY region queries
+CREATE INDEX idx_ch_region
+    ON country_happiness (region);
+ 
+ 
+-- ============================================================
+-- DATA INGESTION
+-- ============================================================
+-- In production this would be a bulk LOAD DATA INFILE or an ETL pipeline.
+-- Region names are entered consistently here so no post-insert TRIM is needed.
+ 
+INSERT INTO country_happiness
+    (country_name, year, happiness_rank, happiness_score,
+     GDP_per_capita, social_support, healthy_life_expectancy,
+     freedom_to_make_choices, generosity, perceptions_of_corruption, region)
 VALUES
-('Finland', 2021, 1, 7.842, 1.447, 1.598, 0.961, 0.662, 0.148, 0.186, 'Europe'),
-('Denmark', 2021, 2, 7.620, 1.515, 1.573, 0.861, 0.686, 0.150, 0.179, 'Europe'),
-('Switzerland', 2021, 3, 7.571, 1.564, 1.526, 1.068, 0.674, 0.230, 0.263, 'Europe'),
-('Iceland', 2021, 4, 7.554, 1.504, 1.644, 1.001, 0.674, 0.293, 0.166, 'Europe'),
-('Netherlands', 2021, 5, 7.464, 1.503, 1.522, 0.922, 0.667, 0.175, 0.182, 'Europe'),
--- Add more rows as needed
-('United States', 2021, 19, 6.951, 1.553, 1.494, 0.836, 0.572, 0.177, 0.154, 'North America');
+    ('Finland',       2021, 1,  7.842, 1.447, 1.598, 0.961, 0.662, 0.148, 0.186, 'Europe'),
+    ('Denmark',       2021, 2,  7.620, 1.515, 1.573, 0.861, 0.686, 0.150, 0.179, 'Europe'),
+    ('Switzerland',   2021, 3,  7.571, 1.564, 1.526, 1.068, 0.674, 0.230, 0.263, 'Europe'),
+    ('Iceland',       2021, 4,  7.554, 1.504, 1.644, 1.001, 0.674, 0.293, 0.166, 'Europe'),
+    ('Netherlands',   2021, 5,  7.464, 1.503, 1.522, 0.922, 0.667, 0.175, 0.182, 'Europe'),
+    -- Add more rows as needed
+    ('United States', 2021, 19, 6.951, 1.553, 1.494, 0.836, 0.572, 0.177, 0.154, 'North America');
+ 
+ 
+-- ============================================================
+-- DATA QUALITY — NULL CHECK
+-- ============================================================
+-- Identify rows with missing values in critical columns.
+-- Run this after every data load to catch ingestion issues early.
+ 
+SELECT *
+FROM country_happiness
+WHERE country_name            IS NULL
+   OR happiness_score         IS NULL
+   OR GDP_per_capita          IS NULL;
+ 
+ 
+-- ============================================================
+-- DATA QUALITY — IMPUTE MISSING CORRUPTION SCORES
+-- ============================================================
 
-
--- Check for any missing data
-SELECT * FROM country_happiness
-WHERE country_name IS NULL OR happiness_score IS NULL OR GDP_per_capita IS NULL;
-
--- Update any missing values (if necessary) or flag them as null (Here, assume no missing values)
--- For example, we can handle missing perceptions_of_corruption by replacing them with average values
 UPDATE country_happiness
 SET perceptions_of_corruption = (
-    SELECT AVG(perceptions_of_corruption)
-    FROM country_happiness
-    WHERE perceptions_of_corruption IS NOT NULL
+    SELECT avg_val
+    FROM (
+        SELECT AVG(perceptions_of_corruption) AS avg_val
+        FROM country_happiness
+        WHERE perceptions_of_corruption IS NOT NULL
+    ) AS corruption_avg  -- derived table alias required by MySQL
 )
 WHERE perceptions_of_corruption IS NULL;
-
--- Ensure region names are consistent
-UPDATE country_happiness
-SET region = TRIM(region);
-
--- Find the top 10 happiest countries
-SELECT country_name, happiness_rank, happiness_score
+ 
+ 
+-- ============================================================
+-- ANALYSIS 1: Top 10 Happiest Countries (2021)
+-- ============================================================
+-- Returns the 10 countries with the highest happiness rank for 2021.
+-- The index on (year, happiness_rank) makes this a fast index scan.
+ 
+SELECT
+    country_name,
+    happiness_rank,
+    happiness_score
 FROM country_happiness
 WHERE year = 2021
 ORDER BY happiness_rank ASC
 LIMIT 10;
-
--- Calculate average happiness score by region
-SELECT region, AVG(happiness_score) AS avg_happiness_score
+ 
+ 
+-- ============================================================
+-- ANALYSIS 2: Average Happiness Score by Region (2021)
+-- ============================================================
+-- Aggregates scores by region to compare continental well-being.
+-- Useful for identifying which parts of the world consistently
+-- score higher and why.
+ 
+SELECT
+    region,
+    ROUND(AVG(happiness_score), 3) AS avg_happiness_score  -- rounded for readability
 FROM country_happiness
 WHERE year = 2021
 GROUP BY region
 ORDER BY avg_happiness_score DESC;
-
--- Explore the correlation between GDP per capita and happiness score
-SELECT GDP_per_capita, happiness_score
+ 
+ 
+-- ============================================================
+-- ANALYSIS 3: GDP per Capita vs. Happiness Score (2021)
+-- ============================================================
+-- Raw data for scatter-plot analysis or correlation modelling.
+-- A positive correlation here suggests wealthier nations tend
+-- to report higher happiness — but this is not causal on its own.
+ 
+SELECT
+    country_name,         -- added for context; helps identify outliers
+    GDP_per_capita,
+    happiness_score
 FROM country_happiness
-WHERE year = 2021;
-
--- Analyze the relationship between social support and happiness
-SELECT social_support, happiness_score
+WHERE year = 2021
+ORDER BY GDP_per_capita DESC;  -- sorted so high-GDP countries appear first
+ 
+ 
+-- ============================================================
+-- ANALYSIS 4: Social Support vs. Happiness (2021)
+-- ============================================================
+-- Countries with stronger social safety nets tend to score higher.
+-- Sort descending to see whether high social support reliably
+-- maps to high happiness scores.
+ 
+SELECT
+    country_name,         -- added for context
+    social_support,
+    happiness_score
 FROM country_happiness
 WHERE year = 2021
 ORDER BY social_support DESC;
-
--- Find countries with low corruption perception and high happiness
-SELECT country_name, happiness_score, perceptions_of_corruption
+ 
+ 
+-- ============================================================
+-- ANALYSIS 5: Low Corruption + High Happiness (2021)
+-- ============================================================
+-- Finds countries that combine low perceived corruption with high
+-- happiness scores — a useful proxy for institutional quality.
+-- Thresholds (corruption < 0.200, happiness > 6.5) are based on
+-- the dataset distribution; adjust as more rows are added.
+ 
+SELECT
+    country_name,
+    happiness_score,
+    perceptions_of_corruption
 FROM country_happiness
 WHERE year = 2021
-AND perceptions_of_corruption < 0.200
-AND happiness_score > 6.5
+  AND perceptions_of_corruption < 0.200
+  AND happiness_score > 6.5
 ORDER BY happiness_score DESC;
-
--- Create a view to analyze key happiness factors by region
-CREATE VIEW happiness_factors_by_region AS
-SELECT region, AVG(GDP_per_capita) AS avg_GDP_per_capita, AVG(social_support) AS avg_social_support,
-       AVG(healthy_life_expectancy) AS avg_life_expectancy, AVG(freedom_to_make_choices) AS avg_freedom,
-       AVG(generosity) AS avg_generosity, AVG(perceptions_of_corruption) AS avg_corruption
+ 
+ 
+-- ============================================================
+-- VIEW: Happiness Factors by Region (all years)
+-- ============================================================
+-- CHANGE FROM ORIGINAL: removed hardcoded WHERE year = 2021
+-- and added year to GROUP BY so this view is reusable across
+-- any year loaded into the table. Query it with:
+--   SELECT * FROM happiness_factors_by_region WHERE year = 2021;
+ 
+CREATE OR REPLACE VIEW happiness_factors_by_region AS
+SELECT
+    year,                                                -- now part of the key
+    region,
+    ROUND(AVG(GDP_per_capita),           4) AS avg_GDP_per_capita,
+    ROUND(AVG(social_support),           4) AS avg_social_support,
+    ROUND(AVG(healthy_life_expectancy),  4) AS avg_life_expectancy,
+    ROUND(AVG(freedom_to_make_choices),  4) AS avg_freedom,
+    ROUND(AVG(generosity),               4) AS avg_generosity,
+    ROUND(AVG(perceptions_of_corruption),4) AS avg_corruption
 FROM country_happiness
-WHERE year = 2021
-GROUP BY region;
-
--- Find regions with the highest life expectancy
-SELECT region, avg_life_expectancy
+GROUP BY year, region;
+ 
+ 
+-- ============================================================
+-- ANALYSIS 6: Regions with Highest Life Expectancy (2021)
+-- ============================================================
+-- Queries the view; add WHERE year = ? to filter by year.
+ 
+SELECT
+    region,
+    avg_life_expectancy
 FROM happiness_factors_by_region
+WHERE year = 2021
 ORDER BY avg_life_expectancy DESC;
+ 
+ 
+-- ============================================================
+-- KEY INSIGHTS
+-- ============================================================
 
+--
+-- 1. TOP HAPPIEST COUNTRIES
+--    Finland, Denmark, Switzerland, and Iceland lead the 2021 rankings.
+--    All four share high social support (≥ 1.526), strong life expectancy
+--    scores, and relatively low corruption perception — suggesting these
+--    factors act together rather than independently.
+--
+-- 2. EUROPE DOMINATES
+--    European countries hold the top five positions. Their combination of
+--    high GDP per capita, robust social support systems, and low corruption
+--    appears to be the defining cluster of characteristics. North America
+--    (US at rank 19) scores well on GDP but lower on freedom and social
+--    support relative to Nordic peers.
+--
+-- 3. DRIVERS OF HAPPINESS
+--    GDP per capita and social support show the strongest apparent
+--    relationship with happiness score in this dataset. Freedom to make
+--    life choices also correlates positively. Generosity and perceptions
+--    of corruption show weaker direct correlations at this sample size,
+--    though they likely matter more in a full global dataset.
 
--- Key Insights
--- Top Happiest Countries: Finland, Denmark, Switzerland, and Iceland rank among the top, primarily due to high levels of social support and life expectancy.
--- Regions and Happiness: European countries generally have higher happiness scores, likely due to high GDP per capita, strong social support systems, and low perceptions of corruption.
--- Drivers of Happiness: Initial analysis indicates a strong correlation between happiness and GDP per capita, social support, and freedom to make life choices. Interestingly, generosity and perceptions of corruption seem to have weaker direct correlations with happiness but are still important factors.
--- Opportunities for Further Exploration: Deeper statistical analysis using Python or R could further uncover the extent to which each factor (GDP, social support, etc.) contributes to overall happiness.
+-- ============================================================
