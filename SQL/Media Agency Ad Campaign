@@ -8,8 +8,7 @@ Overview: The goal of this project is to provide an in-depth analysis of adverti
 -- 1. Campaign Performance Analysis
 -- ============================================================
 -- Aggregate impressions, clicks, and conversions per partner/tactic.
--- Useful for identifying which partner-tactic combinations drive
--- the most volume.
+-- Useful for identifying which partner-tactic combinations drive the most volume.
  
 SELECT
     partner,
@@ -25,11 +24,7 @@ ORDER BY total_impressions DESC;
 -- ============================================================
 -- 2. Cost and Revenue Optimization — Avg CPM and CPCV by Partner
 -- ============================================================
--- Pivots cost structure into columns so CPM and CPCV are
--- comparable side-by-side per partner.
--- NOTE: Partners with only one cost structure type will show
--- NULL for the other column — this is expected and correct.
--- Use COALESCE(..., 0) if you prefer zeros for reporting tools.
+-- Pivots cost structure into columns so CPM and CPCV are comparable side-by-side per partner.
  
 SELECT
     partner,
@@ -43,11 +38,7 @@ ORDER BY avg_cpm ASC;
 -- ============================================================
 -- 3. Click-Through Rate (CTR) and Conversion Rate by Placement
 -- ============================================================
--- SUM(impressions) = 0 or SUM(clicks) = 0 (e.g. a placement that
--- had activity on one metric but not the other).
--- NULLIF converts 0 to NULL so the division returns NULL instead
--- of throwing a divide-by-zero error.
- 
+
 SELECT
     placement_id,
  
@@ -69,8 +60,7 @@ ORDER BY ctr_percentage DESC;
 -- ============================================================
 -- 4. Video Ad Performance — Completion Rate by Placement
 -- ============================================================
--- NOTE: A completion rate above 100% signals a data integrity
--- issue (more completes logged than starts) — flag for review.
+-- NOTE: A completion rate above 100% signals a data integrity issue (more completes logged than starts) 
  
 SELECT
     placement_id,
@@ -85,8 +75,7 @@ ORDER BY video_completion_rate_pct DESC;
 -- ============================================================
 -- 5. Ad Placement Effectiveness by Device Type
 -- ============================================================
--- Shows which device types (mobile, desktop, CTV, etc.) drive
--- the most volume. Useful for budget allocation decisions.
+-- Shows which device types (mobile, desktop, CTV, etc.) drive the most volume. Useful for budget allocation decisions.
  
 SELECT
     device_type,
@@ -102,8 +91,7 @@ ORDER BY total_impressions DESC;
 -- 6. Performance Comparison Between Partners
 -- ============================================================
 -- Ranks partners by conversions to surface top performers.
--- Use alongside Query 7 (ROI) to separate high-volume from
--- high-efficiency partners.
+-- Use alongside Query 7 (ROI) to separate high-volume from high-efficiency partners.
  
 SELECT
     partner,
@@ -147,8 +135,7 @@ ORDER BY roi_percentage DESC;
 -- ============================================================
 -- 8. Time-Series Analysis — Daily Impressions and Clicks
 -- ============================================================
--- Tracks day-by-day volume to identify trends, seasonal dips,
--- or sudden drops that may indicate delivery issues.
+-- Tracks day-by-day volume to identify trends, seasonal dips, or sudden drops that may indicate delivery issues.
  
 SELECT
     DATE(date)           AS report_date,   -- safe for both DATE and DATETIME columns
@@ -162,8 +149,7 @@ ORDER BY report_date ASC;
 -- ============================================================
 -- 9. Anomaly Detection in Ad Metrics
 -- ============================================================
--- Flags daily impression counts that fall more than 2 standard
--- deviations above or below the partner's mean 
+-- Flags daily impression counts that fall more than 2 standard deviations above or below the partner's mean 
  
 WITH stats AS (
     SELECT
@@ -197,8 +183,7 @@ ORDER BY
 -- ============================================================
 -- 10. Metric Correlation — Click and Conversion Ratios
 -- ============================================================
--- Calculates click-to-impression and conversion-to-click ratios
--- per placement. 
+-- Calculates click-to-impression and conversion-to-click ratios per placement. 
 
 SELECT
     placement_id,
