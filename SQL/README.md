@@ -9,7 +9,7 @@ A collection of SQL projects focused on customer analytics, business performance
 **File:**  
 `Amazon's Insights`
 
-A business analytics SQL project covering customer segmentation, sales forecasting, pricing analysis, and product recommendation logic. citeturn764716view0
+A business analytics SQL project covering customer segmentation, sales forecasting, pricing analysis, and product recommendation logic. 
 
 ## Key Work
 
@@ -39,7 +39,7 @@ A business analytics SQL project covering customer segmentation, sales forecasti
 **File:**  
 `Analysis of Happiest Countries`
 
-A SQL analysis of socioeconomic and well-being factors from World Happiness Report data, including GDP per capita, social support, life expectancy, freedom, generosity, and perceptions of corruption. citeturn951559view0
+A SQL analysis of socioeconomic and well-being factors from World Happiness Report data, including GDP per capita, social support, life expectancy, freedom, generosity, and perceptions of corruption. 
 
 ## Key Work
 
@@ -57,7 +57,7 @@ A SQL analysis of socioeconomic and well-being factors from World Happiness Repo
 
 - Finland, Denmark, Switzerland, and Iceland lead the 2021 rankings
 - European countries dominate the highest-ranked group
-- GDP per capita and social support show some of the strongest apparent relationships with happiness in the dataset citeturn308094view0
+- GDP per capita and social support show some of the strongest apparent relationships with happiness in the dataset 
 
 ## SQL Techniques
 
@@ -70,7 +70,7 @@ A SQL analysis of socioeconomic and well-being factors from World Happiness Repo
 **File:**  
 `Media Agency Ad Campaign`
 
-A digital advertising SQL project analyzing impressions, clicks, conversions, video activity, campaign costs, partners, placements, and device performance. citeturn951559view3
+A digital advertising SQL project analyzing impressions, clicks, conversions, video activity, campaign costs, partners, placements, and device performance. 
 
 ## Key Work
 
@@ -83,8 +83,7 @@ A digital advertising SQL project analyzing impressions, clicks, conversions, vi
 - Built an ROI analysis using campaign cost and assumed revenue per conversion
 - Created daily time-series analysis for impressions and clicks
 - Built anomaly detection using standard deviation thresholds
-- Calculated click-to-impression and conversion-to-click ratios citeturn308094view1
-
+- Calculated click-to-impression and conversion-to-click ratios 
 ## SQL Techniques
 
 `CTEs` `CASE` `Aggregations` `JOINs` `NULLIF()` `STDDEV()` `Date Functions` `Conditional Aggregation` `ROI Calculations` `Anomaly Detection`
