@@ -12,7 +12,7 @@ A collection of Excel-based analytical projects focused on operational strategy,
 
 An operations analytics case study evaluating how a specialized widget delivery program should be launched across two different markets.
 
-The analysis covers **1,200 deliveries and 54 Dashers**, including delivery speed, wait time, ratings, on-time performance, vehicle type, and historical performance. fileciteturn3file8L267-L284
+The analysis covers **1,200 deliveries and 54 Dashers**, including delivery speed, wait time, ratings, on-time performance, vehicle type, and historical performance. 
 
 ## Key Work
 
@@ -27,7 +27,7 @@ The analysis covers **1,200 deliveries and 54 Dashers**, including delivery spee
 
 ## Key Finding
 
-Operational speed and reliability were more important for specialized delivery selection than ratings alone. The final strategy recommends a controlled pilot using approximately the **top 20–25% of Dashers**. fileciteturn1file0L21-L25
+Operational speed and reliability were more important for specialized delivery selection than ratings alone. The final strategy recommends a controlled pilot using approximately the **top 20–25% of Dashers**. 
 
 ## Skills Demonstrated
 
@@ -42,7 +42,7 @@ Operational speed and reliability were more important for specialized delivery s
 
 A digital advertising analytics case study combining data from multiple ad-server sources to evaluate Display and Video campaign performance.
 
-The project integrates primary and secondary ad-server data, enriches placements with campaign metadata, calculates media costs, and analyzes campaign performance using PivotTables and calculated metrics. fileciteturn6file0L21-L33
+The project integrates primary and secondary ad-server data, enriches placements with campaign metadata, calculates media costs, and analyzes campaign performance using PivotTables and calculated metrics. 
 
 ## Key Work
 
@@ -57,11 +57,11 @@ The project integrates primary and secondary ad-server data, enriches placements
 
 ## Campaign Analysis
 
-The Video analysis tracked approximately **5.24M impressions, 17.6K clicks, 8.2K conversions, and a 75.8% VCR**. fileciteturn4file3L135-L146
+The Video analysis tracked approximately **5.24M impressions, 17.6K clicks, 8.2K conversions, and a 75.8% VCR**. 
 
-The Display analysis tracked approximately **6.70M impressions, 14.4K clicks, 7.8K conversions, and $37.2K in calculated media cost**. fileciteturn5file5L208-L220
+The Display analysis tracked approximately **6.70M impressions, 14.4K clicks, 7.8K conversions, and $37.2K in calculated media cost**. 
 
-The workbook also identifies a significant tagging anomaly involving **Placement ID 269222010**, demonstrating the importance of validating campaign data before drawing conclusions. fileciteturn5file8L314-L318
+The workbook also identifies a significant tagging anomaly involving **Placement ID 269222010**, demonstrating the importance of validating campaign data before drawing conclusions. 
 
 ## Skills Demonstrated
 
