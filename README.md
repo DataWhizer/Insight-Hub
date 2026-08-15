@@ -1,8 +1,28 @@
-# Megan Lee - Portfolio
+# Megan Lee | Data Analytics & Business Intelligence Portfolio
 
-Welcome to my portfolio!
+Welcome to my portfolio! I’m Megan, a data and business intelligence professional who enjoys turning complex data into clear insights, intuitive dashboards, and practical business recommendations.
 
-My name is Megan, I am a data professional with a diverse background in data engineering, business intelligence, and analytics.  I am proficient in SQL, Excel, Tableau, and have a good understanding of data analytics techniques such as data mining and reporting, data wrangling and manipulation, statistical analysis, dashboard building, process documenting, and data storytelling.
-My portfolio features a range of projects that showcase my technical skills as well as analytical capability.  
+My work combines **SQL, Excel, Power BI, Tableau, data modeling, statistical analysis, and data visualization** to solve problems across operations, finance, marketing, logistics, and performance analytics.
 
-Click on this link to explore more! https://meganleenx.carrd.co/
+I’m especially interested in projects that go beyond reporting and help answer three key questions:
+
+**What is happening? Why is it happening? What should be done next?**
+
+## What I Work On
+
+- Data cleaning, transformation, and validation
+- KPI development and performance analysis
+- Dashboard design and interactive reporting
+- Financial, operational, and marketing analytics
+- Trend, anomaly, and root-cause analysis
+- Data storytelling and executive-level recommendations
+
+I focus on building analyses that are not only technically sound, but also easy for stakeholders to understand and use for decision-making.
+
+## Tools & Technologies
+
+`SQL` `Excel` `Power BI` `Tableau` `Data Modeling` `Statistical Analysis` `Data Visualization` `Business Intelligence`
+
+## Explore More
+
+🌐 [View my full portfolio](https://meganleenx.carrd.co/)
